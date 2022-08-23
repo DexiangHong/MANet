@@ -326,55 +326,6 @@ class CompressedModelMSYoutube(nn.Module):
         return output
 
 
-if __name__ == '__main__':
-    from transformers import BertTokenizer
-    from modeling import cfg
-    import time
-
-    cfg.MODEL.BACKBONE.IMAGE.PRETRAINED_PATH = './resnet.pth'
-    cfg.MODEL.ATTENTION.USE_DECODER = True
-    cfg.MODEL.HEAD.HEATMAP = True
-    cfg.MODEL.FUSION_TYPE = 'multimodaltransformer'
-    model = CompressedModelMS(cfg).eval()
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    img_seq = torch.randn([2, 3, 3, 320, 320])
-    key_frame = torch.randn([2, 3, 320, 320])
-    motions = torch.randn([2, 12, 2, 320, 320])
-    residuals = torch.randn([2, 12, 3, 320, 320])
-    sentence = 'The words'
-    encoder_dict = tokenizer.encode_plus(sentence, add_special_tokens=True, max_length=20,
-                                         pad_to_max_length=True, return_attention_mask=True,
-                                         return_tensors='pt')
-    word_ids = encoder_dict['input_ids']
-    attention_mask = encoder_dict['attention_mask']
-    word_ids = torch.cat([word_ids, word_ids], dim=0)
-    attention_maks = torch.cat([attention_mask, attention_mask], dim=0)
-
-    # model = model.cuda()
-    # print(model.embeddings[0].weight.device)
-
-    # auto_cast = torch.cuda.amp.autocast
-    # with auto_cast():
-    # with torch.no_grad():
-    total = 0
-    output = model({'img_seq': img_seq, 'key_frame': key_frame, 'word_ids': word_ids, 'attention_mask': attention_maks,
-                    'motions': motions, 'residuals': residuals, 'valid_indices': [10, 20]})
-    with torch.no_grad():
-        for _ in range(100):
-            start = time.time()
-            output = model({'img_seq': img_seq, 'key_frame': key_frame, 'word_ids': word_ids, 'attention_mask': attention_maks,
-                            'motions': motions, 'residuals': residuals, 'valid_indices':[10, 20]})
-            total = total + (time.time()-start)
-    print(total / 100)
-
-
-
-
-
-
-
-
-
 
 
 
